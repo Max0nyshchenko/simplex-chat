@@ -1,10 +1,12 @@
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE PostfixOperators #-}
 {-# OPTIONS_GHC -fno-warn-ambiguous-fields #-}
 
 module ChatTests.Files where
 
+import Prelude
 import ChatClient
 import ChatTests.Utils
 import Control.Concurrent (threadDelay)
@@ -23,9 +25,27 @@ import Simplex.Messaging.Crypto.File (CryptoFile (..), CryptoFileArgs (..))
 import Simplex.Messaging.Encoding.String
 import System.Directory (copyFile, createDirectoryIfMissing, doesFileExist, getFileSize)
 import Test.Hspec hiding (it)
+import Control.Monad.Reader
+import qualified UnliftIO.Exception as E
+
+class Monad m => FileSystem m where
+  rename :: FilePath -> FilePath -> m ()
+
+instance FileSystem IO where
+  rename = renameFile
+
+data MockFS = MockFS {mockRename :: FilePath -> FilePath -> IO ()}
+
+instance FileSystem (ReaderT MockFS IO) where
+  rename src dst = do 
+    mockFS  <- ask
+    liftIO $ mockRename mockFS src dst
+
 
 chatFileTests :: SpecWith FilePath
 chatFileTests = do
+  describe "mytest" $ do
+    it "send and receive image" testSendImage
   describe "messages with files" $ do
     it "send and receive message with file" runTestMessageWithFile
     it "send and receive image" testSendImage

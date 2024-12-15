@@ -6,7 +6,7 @@
 
 module Simplex.Chat.Util (week, encryptFile, chunkSize, liftIOEither, shuffle, crossDeviceRenameFile) where
 
-import Control.Exception (Exception)
+import Control.Exception (Exception, catch)
 import Control.Monad
 import Control.Monad.Except
 import Control.Monad.IO.Class
